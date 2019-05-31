@@ -1,0 +1,47 @@
+
+begintemplate IChcell
+	public soma
+	create soma
+	proc init() {
+	    soma {
+	      nseg = 1
+	      diam = 20.
+	      L = 40.
+	      Ra = 200.0
+	      insert hh
+	      insert rgi
+	      
+	    }
+	}
+endtemplate IChcell
+tstop = 30 	// ms
+
+
+
+
+/*
+objref cell, synaps, connector, stimul
+cell = new IChcell()
+forall dc_rgi = 0.0
+forall sd_rgi = 0.0 // 0.018 is the threshold
+objref rnd
+rnd = new Random()
+rnd.normal(0,1)
+rnd.play(&cell.soma.driver_rgi)
+tstop = 300
+dt=0.005
+stimul		= new NetStim()
+stimul.start	= 50
+stimul.noise	= 0
+stimul.number	= 100
+stimul.interval = 100
+cell.soma{ 
+    synaps = new Exp2Syn (.5)
+    synaps.tau1 = 2
+    synaps.tau2 = 2
+    synaps.e = 0
+    connector = new NetCon(stimul,synaps)
+    connector.delay = 0
+    connector.weight = 0.002
+}
+*/

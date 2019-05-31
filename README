@@ -1,0 +1,56 @@
+This model package provides NEURON codes associated with paper:
+Vasilkov V. A. and Tikidji-Hamburyan R. A.(2012) 
+Accurate Detection of Interaural Time Differences by a Population of Slowly Integrating Neurons.
+Phys. Rev. Lett. 108, 138104. 
+
+Scripts in this folder were used to produce Fig.3c of the paper.
+
+Any questions for implementing the model should be directed to 
+	Ruben Tikidji-Hamburyan (rtikid@lsuhsc.edu, ruben.tikidji.hamburyan@gmail.com) 
+	OR/AND 
+	Viacheslav Vasilkov (vasilkov.va@gmail.com)
+
+***************************************************************************
+To run simulation:
+under Linux:
+$nrnivmodl
+$nrngui -nogui hh10000-X-X-X.hoc
+
+To get dat file:
+$python csv2dat.py hh10000-X-X-X.csv
+*************************************************************************** 
+File description:
+
+README - this file
+
+hh10000-gsyngrad-scan11-step0.01.hoc
+hh10000-gsyngrad-scan55-step0.1.hoc
+hh10000-delaygrad-scan11-step0.01.hoc
+hh10000-delaygrad-scan55-step0.1.hoc
+hh10000-jitter-scan11-step0.01.hoc
+hh10000-jitter-scan55-step0.1.hoc
+hh10000-noisecur-scan11-step0.01.hoc
+hh10000-noisecur-scan55-step0.1.hoc
+	every script produces a 'comma separated values' file(csv) with
+	population-rate transfer function for 10000 Hodgkin-Huxley neurons
+	model, with:
+		gsyngrad - synaptic conductances gradients
+		delaygrad - delay lines gradients 
+		jitter - jitter in pathways
+		noisecur - neuron intrinsic noise current
+	scan11 / scan55 means that population-rate transfer function was tested 
+		within [-1, 1]ms or [-5, 5]ms respectively.
+	step - indicates ITD step for testing mesh in selected range. 
+
+rgi.mod - mechanisms for noise current. For better performance, please
+	use Ted Carnevale's InNp.mod for future versions.
+
+hhcell.hoc - template for standard Hodgkin-Huxley neuron model with noise
+	current. WARNING: To use scripts with thread mode, one must include
+	independent random number generator in this template .
+
+main.hoc - functions to run simulation iteratively and obtain population-rate
+	transfer function. DON'T run this file. See Scripts above.
+
+csv2dat.py - simple python script, to convert csv to standard two 
+	columns dat file.

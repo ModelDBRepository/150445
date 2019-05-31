@@ -1,0 +1,199 @@
+objref rn,rc
+b = 0
+strdef a
+system("date +%s",a)
+sscanf(a,"%d",&b)
+rn = new Random(b)
+//Rundom current!
+system("date +%s",a)
+sscanf(a,"%d",&b)
+rc = new Random(b)
+rc.normal(0,1)
+//cell population
+objectvar IChcells[ncells]
+
+//synapses
+objref LE_syn[ncells], LI_syn[ncells], RE_syn[ncells], RI_syn[ncells]
+objref LE_netcon[ncells], LI_netcon[ncells], RE_netcon[ncells], RI_netcon[ncells]
+objref LE_stim, LI_stim, RE_stim[ncells], RI_stim[ncells]
+
+//vectors collect the spike number
+objref apc[ncells],apcvec[ncells]
+
+objref savdata
+savdata = new File()
+savdata.wopen(simpref)
+if (gui_flag == 0){
+	savdata.printf(file_prefix)
+}
+//for ploting result
+objref vresult, g
+if (gui_flag == 1) {
+	vresult = new Vector(2,0)
+	g = new Graph()
+	g.erase_all()
+}
+
+//Create new objects and jittered pathways :P
+for i = 0, ncells - 1 {
+	IChcells[i]			= new IChcell()
+	RI_stim[i]			= new NetStim()
+	RI_stim[i].start	= 10	// ms
+	RI_stim[i].noise	= 0		// 0 is periodic, 1 is poisson
+	RE_stim[i]			= new NetStim()
+	RE_stim[i].start	= 10	// ms
+	RE_stim[i].noise	= 0		// 0 is periodic, 1 is poisson
+	rc.play(&IChcells[i].soma.driver_rgi)
+}
+
+LE_stim			= new NetStim()
+LE_stim.start	= 10	// ms
+LE_stim.noise	= 0		// 0 is periodic, 1 is poisson
+LI_stim			= new NetStim()
+LI_stim.start	= 10	// ms
+LI_stim.noise	= 0		// 0 is periodic, 1 is poisson
+
+for i = 0, ncells - 1 IChcells[i].soma {
+	//create spike counter
+	apcvec[i] = new Vector()
+	apc[i] = new APCount( .5 )
+	apc[i].thresh = 0
+	apc[i].record(apcvec[i])
+
+	//create LEFT exc. synapse
+	LE_syn[i]			= new Exp2Syn( .5 )
+	LE_syn[i].tau1		= 2		// ms
+	LE_syn[i].tau2		= 2		// ms
+	LE_syn[i].e			= 0		// mV
+	LE_netcon[i]		= new NetCon( LE_stim,LE_syn[i] )
+	LE_netcon[i].delay	= 0		// ms
+
+	//create RIGHT inh. synapse
+	RI_syn[i]			=  new Exp2Syn( .5 )
+	RI_syn[i].tau1		= 4		// ms
+	RI_syn[i].tau2		= 4		// ms
+	RI_syn[i].e			= -75	// mV
+	RI_netcon[i]		= new NetCon( RI_stim[i], RI_syn[i] )
+	RI_netcon[i].delay	= 0		// ms
+
+	//create RIGHT exc. synapse
+	RE_syn[i]			= new Exp2Syn(0.5)
+	RE_syn[i].tau1		= 2		// ms
+	RE_syn[i].tau2		= 2		// ms
+	RE_syn[i].e			= 0		// mV
+	RE_netcon[i]		= new NetCon( RE_stim[i],RE_syn[i])
+	RE_netcon[i].delay	= 0 // ms
+
+	//create LEFT inh. synapse
+	LI_syn[i]			= new Exp2Syn(0.5)
+	LI_syn[i].tau1		= 4		// ms
+	LI_syn[i].tau2		= 4		// ms
+	LI_syn[i].e			= -75	// mV
+	LI_netcon[i]		= new NetCon(LI_stim, LI_syn[i])
+	LI_netcon[i].delay	= 0 // ms
+}
+
+// Main function for test running
+proc myrun() {
+	if (run_flag) return
+	run_flag = 1
+	finitialize(-65.0)
+	//setup synaptic weughts
+	LE_stim.interval	= LE_isi
+	LE_stim.number		= LE_stimuli_number
+	LI_stim.interval	= LI_isi
+	LI_stim.number		= LI_stimuli_number
+	forall dc_rgi 		= nrn_idc
+	forall sd_rgi 		= nrn_isd
+
+	
+	for i = 0, ncells-1 {
+		leg = LE_conduc_a + i/ncells*(LE_conduc_b - LE_conduc_a)
+		LE_netcon[i].weight = rn.normal(leg, LE_conduc_sd)
+		led = LE_delay_a + i/ncells*(LE_delay_b - LE_delay_a)
+		LE_netcon[i].delay =  rn.normal(led,LE_delay_sd)
+
+		rig = RI_conduc_a + i/ncells*(RI_conduc_b - RI_conduc_a)
+		RI_netcon[i].weight = rn.normal(rig, RI_conduc_sd)
+		rid = RI_delay_a + i/ncells*(RI_delay_b - RI_delay_a)
+		RI_netcon[i].delay =  rn.normal(rid,RI_delay_sd)
+
+		reg = RE_conduc_a + i/ncells*(RE_conduc_b - RE_conduc_a)
+		RE_netcon[i].weight	= rn.normal(reg, RE_conduc_sd)
+		red = RE_delay_a + i/ncells*(RE_delay_b - RE_delay_a)
+		RE_netcon[i].delay = rn.normal(red, RE_delay_sd)
+
+		lig = LI_conduc_a + i/ncells*(LI_conduc_b - LI_conduc_a)
+		LI_netcon[i].weight	= rn.normal(lig, LI_conduc_sd)
+		lid = LI_delay_a + i/ncells*(LI_delay_b - LI_delay_a)
+		LI_netcon[i].delay =  rn.normal(lid, LI_delay_sd)
+	}
+	if(gui_flag){
+		savdata.printf("%g,%g,%g,%g,%g,",ncells, NITD, PITD, scan_step, Relevant_ITD)
+		savdata.printf("%g,%g,",nrn_idc, nrn_isd)
+		savdata.printf("%g,%g,%g,%g,%g,%g,%d,%g,",LE_conduc_a,LE_conduc_b,LE_conduc_sd,LE_delay_a,LE_delay_b,LE_delay_sd,LE_stimuli_number, LE_isi)
+		savdata.printf("%g,%g,%g,%g,%g,%g,%d,%g,",RI_conduc_a,RI_conduc_b,RI_conduc_sd,RI_delay_a,RI_delay_b,RI_delay_sd,RI_stimuli_number, RI_isi)
+		savdata.printf("%g,%g,%g,%g,%g,%g,%d,%g,",LI_conduc_a,LI_conduc_b,LI_conduc_sd,LI_delay_a,LI_delay_b,LI_delay_sd,LI_stimuli_number, LE_isi)
+		savdata.printf("%g,%g,%g,%g,%g,%g,%d,%g,",RE_conduc_a,RE_conduc_b,RE_conduc_sd,RE_delay_a,RE_delay_b,RE_delay_sd,RE_stimuli_number, RE_isi)
+		savdata.printf("%g,%g,%s",RI_jitter_sd,RE_jitter_sd,file_prefix)
+
+
+	}
+	QualityFactor = 0
+	//Run test
+	for(ITD=NITD;ITD<=PITD && run_flag;ITD+=scan_step){
+		for i = 0, ncells-1 {
+			RE_stim[i].start	= rn.normal((10+ITD), RE_jitter_sd) // ms
+			RE_stim[i].number	= RE_stimuli_number
+			RE_stim[i].interval	= RE_isi
+			RI_stim[i].start	= rn.normal((10+ITD), RI_jitter_sd) // ms
+			RI_stim[i].number	= RI_stimuli_number
+			RI_stim[i].interval	= RI_isi
+		}
+		if(gui_flag){
+			printf ("   %f\r   ", ITD)
+		}
+		run()
+		totnspikes = 0
+		for i = 0, ncells-1 {
+			totnspikes+=apcvec[i].size()
+		}
+		savdata.printf(",%g",totnspikes/ncells)
+		savdata.flush()
+		if (gui_flag) {
+			vresult.append(totnspikes)
+		}
+		if(ITD > (-Relevant_ITD) && (ITD < Relevant_ITD)){
+			nstp = (ITD + Relevant_ITD)
+			lvalue = nstp * ncells * 0.5 / Relevant_ITD
+			QualityFactor += (lvalue - totnspikes) * (lvalue - totnspikes)
+		}
+	}
+	savdata.printf(",%g\n",ncells/(ncells+sqrt(QualityFactor)) )
+
+	if(gui_flag){
+		print "GUI on!"
+		g.size(NITD, PITD, 0, vresult.max())
+		g.beginline()
+		for i=0, vresult.size() - 1 {
+			g.line(i*scan_step+NITD,vresult.x[i])
+		}
+		g.flush()
+		vresult.remove(0,vresult.size() - 1)
+		printf("======== Simulation %04d IS DONE ===== Quality Facotr = %g ========\n%c",simcnt,1/(1+sqrt(QualityFactor)),07)
+	} else {
+		printf("QF=%g\n",ncells/(ncells+sqrt(QualityFactor)) )
+	}
+
+	run_flag = 0
+	simcnt += 1
+}
+
+
+if ( gui_flag ) {
+	load_file("gui.hoc")
+} else {
+	myrun()
+	quit()
+}
+

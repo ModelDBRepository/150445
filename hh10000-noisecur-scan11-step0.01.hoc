@@ -1,0 +1,84 @@
+strdef model, simpref, file_prefix
+simpref		= "hh10000-noisecur-scan11-step0.01.csv"
+file_prefix	= "HH10000,noisecur,-1,1,0.01," 
+
+model = "hhcell.hoc"
+dt = 0.005 		// integration step 5 mks(us)
+tstop = 80		// full time of simulation
+ncells = 10000		// number of cells
+NITD = -1.0		//a scanning range in ms,
+PITD =  1.0		//left and right boundary
+scan_step=0.01		//scanning step 10 mks(us)
+Relevant_ITD = 0.8	//a boundary (symmetric) of biological relevant intervals
+
+run_flag = 0
+gui_flag = 0		// 0 - batch mode
+
+
+
+
+//Optimal values
+//for HH  ex=0.002 ih=0.00389
+//for MSO ex=0.009 ih=0.00395
+
+//Synaptic conduct. linearly distribution and normal deviation
+//Delay of spike propagation linearly distribution and normal deviation
+
+//Left Excitation
+LE_conduc_a		= 0.002	
+LE_conduc_b		= 0.002
+LE_conduc_sd		= 0.0
+LE_delay_a		= 2
+LE_delay_b		= 2
+LE_delay_sd		= 0.0000
+
+//Right Inhibition
+RI_conduc_a		= 0.004
+RI_conduc_b		= 0.004
+RI_conduc_sd		= 0.0
+RI_delay_a		= 2
+RI_delay_b		= 2
+RI_delay_sd		= 0.0000
+
+//Right Excitation
+RE_conduc_a		= 0.0
+RE_conduc_b		= 0.0
+RE_conduc_sd		= 0.0
+RE_delay_a		= 2
+RE_delay_b		= 2
+RE_delay_sd		= 0.0000
+
+//Left Inhibition
+LI_conduc_a		= 0.00000
+LI_conduc_b		= 0.00000
+LI_conduc_sd		= 0.000
+LI_delay_a		= 2
+LI_delay_b		= 2
+LI_delay_sd		= 0.0000
+
+
+//Number of stimuli, interval between
+//and Jitter Variation
+RI_stimuli_number	= 1.0
+RI_isi			= 2.0
+LI_stimuli_number	= 1
+LI_isi			= 2
+RE_stimuli_number	= 1
+RE_isi			= 2	//(ms)
+RE_jitter_sd		= 0.0000	//max value of phase noise
+
+RI_jitter_sd		= 0.0
+LE_stimuli_number 	= 1.0
+LE_isi			= 2.0
+
+/*---------------------------------------------------------*/
+//Neuron noise current paramters
+nrn_idc 		= 0
+nrn_isd			= 0.003
+
+/*---------------------------------------------------------*/
+
+
+load_file(model)
+load_file("main.hoc")
+
